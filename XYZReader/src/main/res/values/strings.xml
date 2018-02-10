@@ -9,4 +9,6 @@
 
     <string name="up">Up</string>
 
+    <string name="image_transition">Material design transition</string>
+
 </resources>
