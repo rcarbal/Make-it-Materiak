@@ -152,6 +152,7 @@ public class ArticleDetailFragment extends Fragment implements
 
         bindViews();
         updateStatusBar();
+        getActivity().startPostponedEnterTransition();
         return mRootView;
     }
 
