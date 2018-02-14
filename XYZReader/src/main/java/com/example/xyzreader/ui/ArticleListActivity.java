@@ -10,6 +10,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
@@ -35,6 +36,7 @@ import com.example.xyzreader.data.UpdaterService;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -154,23 +156,14 @@ public class ArticleListActivity extends ActionBarActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        ActivityOptions bundle = ActivityOptions
-                                .makeSceneTransitionAnimation(ArticleListActivity.this,
-                                        vh.thumbnailView,
-                                        getString(R.string.image_transition));
-
-                        startActivity(new Intent(Intent.ACTION_VIEW,
-                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))), bundle.toBundle());
-                    }else{
-                        startActivity(new Intent(Intent.ACTION_VIEW,
-                                ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
-                    }
+                    Bundle bundle = ActivityOptions
+                            .makeSceneTransitionAnimation(ArticleListActivity.this).toBundle();
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))), bundle);
                 }
             });
             return vh;
         }
-
         private Date parsePublishedDate() {
             try {
                 String date = mCursor.getString(ArticleLoader.Query.PUBLISHED_DATE);
@@ -185,8 +178,11 @@ public class ArticleListActivity extends ActionBarActivity implements
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             mCursor.moveToPosition(position);
+
+            holder.thumbnailView.setTransitionName(getString(R.string.image_transition) + position);
             holder.titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
             Date publishedDate = parsePublishedDate();
+            String cursorId = mCursor.getString(ArticleLoader.Query._ID);
             if (!publishedDate.before(START_OF_EPOCH.getTime())) {
 
                 holder.subtitleView.setText(Html.fromHtml(
@@ -199,8 +195,8 @@ public class ArticleListActivity extends ActionBarActivity implements
             } else {
                 holder.subtitleView.setText(Html.fromHtml(
                         outputFormat.format(publishedDate)
-                        + "<br/>" + " by "
-                        + mCursor.getString(ArticleLoader.Query.AUTHOR)));
+                                + "<br/>" + " by "
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)));
             }
             Target target = new Target() {
                 @Override
