@@ -11,4 +11,9 @@
 
     <string name="image_transition">transition</string>
 
+    <string name="retry_text">No internet connection</string>
+    <string name="hit_retry">Retry</string>
+
+    <string name="share_article">Article:</string>
+
 </resources>

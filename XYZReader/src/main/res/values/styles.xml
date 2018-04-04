@@ -42,6 +42,7 @@
             @transition/grid_exit</item>
     </style>
 
+    <!--suppress AndroidDomInspection -->
     <style name="FragmentSlide" parent="BaseThemeForApp">
         <item name="android:fragmentEnterTransition">
 

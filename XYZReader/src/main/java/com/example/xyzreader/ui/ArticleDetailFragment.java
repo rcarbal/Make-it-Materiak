@@ -1,5 +1,6 @@
 package com.example.xyzreader.ui;
 
+import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.os.Bundle;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.graphics.Palette;
 import android.text.Html;
+import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +28,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.example.xyzreader.data.GetCursorStringAsyncLoader;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,12 +48,16 @@ public class ArticleDetailFragment extends Fragment implements
     private static final float PARALLAX_FACTOR = 1.25f;
 
     private Cursor mCursor;
-    private long mItemId;
     private View mRootView;
     private int mMutedColor = 0xFF333333;
     private ObservableScrollView mScrollView;
     private DrawInsetsFrameLayout mDrawInsetsFrameLayout;
     private ColorDrawable mStatusBarColorDrawable;
+
+    TextView titleView;
+    TextView bylineView;
+    TextView bodyView;
+    private long mItemId;
 
     private int mTopInset;
     private View mPhotoContainerView;
@@ -59,8 +66,12 @@ public class ArticleDetailFragment extends Fragment implements
     private boolean mIsCard = false;
     private int mStatusBarFullOpacityBottom;
 
+    private final static int GET_CURSOR_STRING = 1;
+
+    @SuppressLint("SimpleDateFormat")
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
+    @SuppressLint("SimpleDateFormat")
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
     // Most time functions can only handle 1902 - 2037
     private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2, 1, 1);
@@ -70,6 +81,15 @@ public class ArticleDetailFragment extends Fragment implements
      * fragment (e.g. upon screen orientation changes).
      */
     public ArticleDetailFragment() {
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("title", titleView.getText().toString());
+        outState.putString("byline", bylineView.getText().toString());
+        outState.putString("body", bodyView.getText().toString());
+        outState.putLong("itemid", mItemId);
     }
 
     public static ArticleDetailFragment newInstance(long itemId) {
@@ -107,6 +127,17 @@ public class ArticleDetailFragment extends Fragment implements
         // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
         // we do this in onActivityCreated.
         getLoaderManager().initLoader(0, null, this);
+        if (savedInstanceState != null) {
+            titleView = (TextView) mRootView.findViewById(R.id.article_title);
+            bodyView = (TextView) mRootView.findViewById(R.id.article_body);
+            bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
+            bylineView.setMovementMethod(new LinkMovementMethod());
+
+            titleView.setText(savedInstanceState.getString("title", "N/A"));
+            bylineView.setText(savedInstanceState.getString("byline", "N/A"));
+            bodyView.setText(savedInstanceState.getString("body", "N/A"));
+            mItemId = savedInstanceState.getLong("itemid", -1);
+        }
     }
 
     @Override
@@ -143,7 +174,7 @@ public class ArticleDetailFragment extends Fragment implements
             public void onClick(View view) {
                 startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(getActivity())
                         .setType("text/plain")
-                        .setText("Some sample text")
+                        .setText(getString(R.string.share_article) + " " +titleView.getText())
                         .getIntent(), getString(R.string.action_share)));
             }
         });
@@ -198,10 +229,10 @@ public class ArticleDetailFragment extends Fragment implements
             return;
         }
 
-        TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
-        TextView bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
+        titleView = (TextView) mRootView.findViewById(R.id.article_title);
+        bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
-        TextView bodyView = (TextView) mRootView.findViewById(R.id.article_body);
+        bodyView = (TextView) mRootView.findViewById(R.id.article_body);
 
 
         bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
@@ -210,29 +241,28 @@ public class ArticleDetailFragment extends Fragment implements
             mRootView.setAlpha(0);
             mRootView.setVisibility(View.VISIBLE);
             mRootView.animate().alpha(1);
-           //titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
+
             Date publishedDate = parsePublishedDate();
             if (!publishedDate.before(START_OF_EPOCH.getTime())) {
-//                bylineView.setText(Html.fromHtml(
-//                        DateUtils.getRelativeTimeSpanString(
-//                                publishedDate.getTime(),
-//                                System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
-//                                DateUtils.FORMAT_ABBREV_ALL).toString()
-//                                + " by <font color='#ffffff'>"
-//                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
-//                                + "</font>"));
+                bylineView.setText(Html.fromHtml(
+                        DateUtils.getRelativeTimeSpanString(
+                                publishedDate.getTime(),
+                                System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                                DateUtils.FORMAT_ABBREV_ALL).toString()
+                                + " by <font color='#ffffff'>"
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "</font>"));
 
             } else {
                 // If date is before 1902, just show the string
-//                bylineView.setText(Html.fromHtml(
-//                        outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
-//                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
-//                                + "</font>"));
+                bylineView.setText(Html.fromHtml(
+                        outputFormat.format(publishedDate) + " by <font color='#ffffff'>"
+                                + mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "</font>"));
 
             }
-            String bodyString = Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY)
-                    .replaceAll("(\r\n|\n)", "<br />")).toString();
-            // bodyView.setText(bodyString.substring(0,1000));
+            getCursorString();
+
             ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
                     .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
                         @Override
@@ -302,4 +332,38 @@ public class ArticleDetailFragment extends Fragment implements
                 ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
                 : mPhotoView.getHeight() - mScrollY;
     }
+
+    private void getCursorString() {
+        LoaderManager loaderManager = getLoaderManager();
+        Loader<String[]> getString = loaderManager.getLoader(GET_CURSOR_STRING);
+        if (getString == null) {
+            getLoaderManager().initLoader(GET_CURSOR_STRING, null, getStringFromCursor);
+        } else {
+            loaderManager.restartLoader(GET_CURSOR_STRING, null, getStringFromCursor);
+        }
+    }
+
+    private final LoaderManager.LoaderCallbacks<String[]> getStringFromCursor =
+            new LoaderManager.LoaderCallbacks<String[]>() {
+                @Override
+                public Loader<String[]> onCreateLoader(int id, Bundle args) {
+                    return new GetCursorStringAsyncLoader(getActivity(), mCursor);
+                }
+
+                @Override
+                public void onLoadFinished(Loader<String[]> loader, String[] data) {
+
+                    bodyView = (TextView) mRootView.findViewById(R.id.article_body);
+                    bodyView.setText(data[1].substring(0, 2000));
+                    titleView = (TextView) mRootView.findViewById(R.id.article_title);
+                    titleView.setText(data[0]);
+                }
+
+                @Override
+                public void onLoaderReset(Loader<String[]> loader) {
+
+                }
+            };
+
+
 }
