@@ -1,4 +1,4 @@
-# Make-it-Materiak
+# Make-it-Material
 The fifth project in Udacity Developer Nanodegree program.
 
 ## Features
@@ -24,7 +24,6 @@ An RSS feed reader that conveys Google's Material Design specification.
 
 ## Screenshots
 
-<img src="https://user-images.githubusercontent.com/20021751/38532853-7f7b9622-3c2b-11e8-9551-c84c7caffff5.png" width="330">
 <img src="https://user-images.githubusercontent.com/20021751/38532853-7f7b9622-3c2b-11e8-9551-c84c7caffff5.png" width="330">
 <img src="https://user-images.githubusercontent.com/20021751/38532866-8a6a456a-3c2b-11e8-8386-fc9feea90618.png" width="330">
 <img src="https://user-images.githubusercontent.com/20021751/38532868-8dfebf30-3c2b-11e8-83b4-6407007a217b.png" width="330">
